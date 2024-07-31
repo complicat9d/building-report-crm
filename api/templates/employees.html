@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Employees{% endblock %}
+
+{% block content %}
+<div class="container-profile mt-4">
+    <div id="employeeTable">
+        <div class="mr">
+            <div class="table-block_5">
+                <h3>Список сотрудников</h3>
+
+                <!-- Include pagination controls here -->
+                {% include "pagination.html" %}
+                <button id="addUserBtn" class="addBtn btn btn-primary" onclick="AddUser()">Добавить рабочего</button>
+                <table class="table table-striped mt-3">
+                    <thead>
+                    <tr>
+                        <th>ФИО</th>
+                        <th>Специальность</th>
+                        <th>Активен</th>
+                        <th>Личная ссылка</th>
+                        <th>Профиль</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for employee in employees %}
+                    <tr>
+                        <td>{{ employee.fio }}</td>
+                        <td>{{ employee.job_title }}</td>
+                        <td>
+                            <input type="checkbox" name="employee" value="{{ employee.is_active }}" disabled class="form-check-input" {% if employee.is_active %}checked{% endif %}>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-link"
+                                    onclick="copyToClipboard('t.me/{{ bot_name }}?start={{ employee.token }}')">
+                                {{ employee.token }}
+                            </button>
+                        </td>
+                        <td>
+                            <a class="addBtn btn btn-primary" onclick="viewProfile({{employee.id}})">Посмотреть профиль</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Copy Link Modal -->
+<div class="modal fade" id="copyLinkModal" tabindex="-1" aria-labelledby="copyLinkModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <p>Ссылка скопирована в буфер обмена</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Ок</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function viewProfile(id) {
+        window.location.href = `employees/${id}/profile/`;
+    }
+
+    function AddUser() {
+        window.location.href = "employees/create";
+    }
+
+    function copyToClipboard(text) {
+      // Создаем временный элемент <textarea>
+      const textarea = document.createElement('textarea');
+
+      // Устанавливаем его значение на текст, который нужно скопировать
+      textarea.value = text;
+
+      // Добавляем элемент на страницу (он должен быть добавлен в документ, чтобы выделение работало)
+      document.body.appendChild(textarea);
+
+      // Выделяем текст внутри элемента
+      textarea.select();
+
+      // Копируем выделенный текст в буфер обмена
+      try {
+        const successful = document.execCommand('copy');
+        const msg = successful ? 'успешно' : 'не удалось';
+        console.log('Копирование текста ' + msg);
+
+        // **Показать модальное окно после успешного копирования**
+        if (successful) {
+          $('#copyLinkModal').modal('show');
+        }
+      } catch (err) {
+        console.error('Ошибка при копировании текста', err);
+      }
+
+      // Удаляем временный элемент
+      document.body.removeChild(textarea);
+    }
+
+
+</script>
+
+<!-- Ensure to include Bootstrap's JS bundle to handle modals -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+{% endblock %}

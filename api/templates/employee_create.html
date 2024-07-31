@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Создать нового работника{% endblock %}
+
+{% block content %}
+<div class="container">
+    <form method="post" class="block_5" id="createEmployeeForm" onsubmit="return validateForm()">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="mb-0">Создать нового работника</h3>
+            <a href="/employees" class="btn btn-primary">Назад к списку работников</a>
+        </div>
+        <div class="mb-3">
+            <label for="fio" class="form-label">ФИО</label>
+            <input type="text" name="fio" class="form-control" id="fio">
+            <div class="invalid-feedback">
+                Пожалуйста, заполните это поле.
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="job_title" class="form-label">Специальность</label>
+            <input type="text" name="job_title" class="form-control" id="job_title">
+            <div class="invalid-feedback">
+                Пожалуйста, заполните это поле.
+            </div>
+        </div>
+        <!-- Hidden input for is_active always set to false -->
+        <input type="hidden" name="is_active" value="false">
+
+        <div class="mb-3">
+            <label for="facilities" class="form-label">Объекты</label>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Адрес</th>
+                    <th>Доступ</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for place in places %}
+                <tr>
+                    <td>{{ place.title }}</td>
+                    <td>{{ place.address }}</td>
+                    <td>
+                        <input type="checkbox" name="facilities" value="{{ place.id }}" class="form-check-input" {% if
+                               place.active %}checked{% endif %}>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <button class="btn btn-primary" id="createEmployee" type="submit">Создать работника</button>
+    </form>
+</div>
+
+<!-- Required Fields Modal -->
+<div class="modal fade" id="requiredFieldsModal" tabindex="-1" aria-labelledby="requiredFieldsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="requiredFieldsModalLabel">Пожалуйста, заполните все обязательные поля.</h5>
+            </div>
+            <div class="modal-body">
+                Пожалуйста, заполните все обязательные поля перед отправкой формы.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Ок</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function validateForm() {
+        const fio = document.getElementById('fio');
+        const job_title = document.getElementById('job_title');
+
+        let valid = true;
+
+        if (!fio.value.trim()) {
+            fio.classList.add('is-invalid');
+            valid = false;
+        } else {
+            fio.classList.remove('is-invalid');
+        }
+
+        if (!job_title.value.trim()) {
+            job_title.classList.add('is-invalid');
+            valid = false;
+        } else {
+            job_title.classList.remove('is-invalid');
+        }
+
+        return valid;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('createEmployee').addEventListener('click', function (event) {
+            if (!validateForm()) {
+                event.preventDefault(); // Prevent form submission if validation fails
+                const requiredFieldsModal = new bootstrap.Modal(document.getElementById('requiredFieldsModal'));
+                requiredFieldsModal.show();
+            }
+        });
+
+        document.getElementById('confirmRequiredBtn').addEventListener('click', function () {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('requiredFieldsModal'));
+            modal.hide();
+        });
+    });
+</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

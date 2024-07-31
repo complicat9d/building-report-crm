@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Объекты{% endblock %}
+
+{% block content %}
+<div class="container-profile mt-4">
+  <div id="facilityTable">
+    <div class="mr">
+      <div class="table-block_5">
+        <h3>Список объектов</h3>
+
+        <!-- Include pagination controls here -->
+        {% include "pagination.html" %}
+        <button id="addFacilityBtn" class="addBtn btn btn-primary" onclick="AddFacility()">Добавить объект</button>
+        <table class="table table-striped mt-3">
+          <thead>
+          <tr>
+            <th>Название</th>
+            <th>Описание</th>
+            <th>Активен</th>
+            <th>Адрес</th>
+            <th>Действия</th>
+          </tr>
+          </thead>
+          <tbody>
+          {% for facility in facilities %}
+          <tr>
+            <td>{{ facility.title }}</td>
+            <td>{{ facility.description }}</td>
+            <td>
+              <input type="checkbox" name="facility" value="{{ facility.active }}" disabled class="form-check-input" {% if facility.active %}checked{% endif %}>
+            </td>
+            <td>{{ facility.address }}</td>
+            <td>
+              <button class="btn btn-primary" onclick="viewFacilityProfile({{ facility.id }})">Посмотреть объект</button>
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function viewFacilityProfile(id) {
+    window.location.href = `./${id}/profile`;
+  }
+
+  function AddFacility() {
+    window.location.href = "./create";
+  }
+</script>
+{% endblock %}

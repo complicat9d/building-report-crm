@@ -1,0 +1,75 @@
+version: "3"
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python3 bot/main.py
+    container_name: bot_container
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./api/static:/app/api/static
+    networks:
+      - app-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python3 api/run_server.py
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8006:8006"
+    volumes:
+      - ./api/static:/app/api/static
+    networks:
+      - app-network
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python3 scheduler.py
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - app-network
+
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - ./db:/var/lib/postgresql/data
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=1000"
+    networks:
+      - app-network
+
+  alembic:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: alembic upgrade head
+    env_file:
+      - .env
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+
+networks:
+  app-network:
+    driver: bridge

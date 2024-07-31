@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}{{ facility.title }}'s Update{% endblock %}
+
+{% block content %}
+<div class="container-profile">
+    <div class="profile">
+        <div class="profile-info">
+            <h2>{{ facility.title }}</h2>
+            <div class="profile-details">
+                <form id="updateForm" method="post" action="/facilities/{{ facility.id }}/update">
+                    <input type="hidden" name="facility_id" value="{{ facility.id }}">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Название</label>
+                        <input type="text" class="form-control" id="title" name="title" value="{{ facility.title }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Описание</label>
+                        <input type="text" class="form-control" id="description" name="description" value="{{ facility.description }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Адрес</label>
+                        <input type="text" class="form-control" id="address" name="address" value="{{ facility.address }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="activeCheckbox" class="form-label">Активен</label>
+                        <input type="hidden" name="active" value="false">
+                        <input type="checkbox" id="activeCheckbox" name="active" class="form-check-input" {% if facility.active %}checked{% endif %}>
+                    </div>
+                    <div class="mb-3">
+                        <label for="employees" class="form-label">Привязанные сотрудники:</label>
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>ФИО</th>
+                                <th>Специальность</th>
+                                <th>Доступ</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for employee in employees %}
+                            <tr>
+                                <td>{{ employee.fio }}</td>
+                                <td>{{ employee.job_title }}</td>
+                                <td>
+                                    <input type="checkbox" name="employees" value="{{ employee.id }}" class="form-check-input" {% if employee.is_active %}checked{% endif %}>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-primary" id="submitButton" onclick="submitForm()">Сохранить изменения</button>
+                        <a href="/facilities/{{ facility.id }}/profile" class="btn btn-secondary" id="profileLink">Обратно в профиль</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Unsaved Changes Modal -->
+<div class="modal fade" id="unsavedChangesModal" tabindex="-1" aria-labelledby="unsavedChangesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="unsavedChangesModalLabel">Предупреждение</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Вы уверены, что хотите покинуть страницу? Несохраненные изменения будут утеряны.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="confirmLeaveBtn">Покинуть страницу</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Required Fields Modal -->
+<div class="modal fade" id="requiredFieldsModal" tabindex="-1" aria-labelledby="requiredFieldsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="requiredFieldsModalLabel">Пожалуйста, заполните все обязательные поля.</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Пожалуйста, заполните все обязательные поля перед отправкой формы.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Ок</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Function to handle form submission
+    function submitForm() {
+        // Validate required fields
+        if (validateForm()) {
+            // Set the value of the hidden input based on the checkbox state
+
+            // literally, the same line is absent in the same structured file: employee_update; with it update of
+            // facility entity does not work
+            // document.querySelector('input[name="active"][type="hidden"]').value = document.getElementById('activeCheckbox').checked ? "true" : "false";
+
+            // Submit the form
+            document.getElementById('updateForm').submit();
+            // Reset changes flag after submission
+            changesMade = false;
+        } else {
+            // Show the required fields modal
+            let requiredFieldsModal = new bootstrap.Modal(document.getElementById('requiredFieldsModal'), {});
+            requiredFieldsModal.show();
+        }
+    }
+
+    // Function to validate the form
+    function validateForm() {
+        const title = document.getElementById('title');
+        const description = document.getElementById('description');
+        const address = document.getElementById('address');
+        let valid = true;
+
+        if (!title.value.trim()) {
+            title.classList.add('is-invalid');
+            valid = false;
+        } else {
+            title.classList.remove('is-invalid');
+        }
+
+        if (!description.value.trim()) {
+            description.classList.add('is-invalid');
+            valid = false;
+        } else {
+            description.classList.remove('is-invalid');
+        }
+
+        if (!address.value.trim()) {
+            address.classList.add('is-invalid');
+            valid = false;
+        } else {
+            address.classList.remove('is-invalid');
+        }
+
+        return valid;
+    }
+
+    // Event listener for form input changes
+    document.addEventListener('input', function (event) {
+        // Set changesMade to true when any input element value changes
+        changesMade = true;
+        validateForm(); // Validate form on any input change
+    });
+
+    // Event listener for link to profile page
+    document.getElementById('profileLink').addEventListener('click', function (event) {
+        if (changesMade) {
+            // Prevent navigation and show modal
+            event.preventDefault();
+            leaveLink = event.target.href;
+            let unsavedChangesModal = new bootstrap.Modal(document.getElementById('unsavedChangesModal'), {});
+            unsavedChangesModal.show();
+        }
+    });
+
+    // Confirm leave button in unsaved changes modal
+    document.getElementById('confirmLeaveBtn').addEventListener('click', function () {
+        window.location.href = leaveLink;
+    });
+
+</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

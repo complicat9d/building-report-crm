@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}{{ user.fio }}'s Update{% endblock %}
+
+{% block content %}
+<div class="container-profile">
+    <div class="profile">
+        <div class="profile-info">
+            <h2>{{ user.fio }}</h2>
+            <div class="profile-details">
+                <form id="updateForm" method="post" action="/employees/{{ user.id }}/update">
+                    <input type="hidden" name="id" value="{{ user.id }}">
+                    <div class="mb-3">
+                        <label for="fio" class="form-label">ФИО</label>
+                        <input type="text" class="form-control" id="fio" name="fio" value="{{ user.fio }}" required>
+                        <div class="invalid-feedback">
+                            Пожалуйста, заполните это поле.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="job_title" class="form-label">Специальность</label>
+                        <input type="text" class="form-control" id="job_title" name="job_title" value="{{ user.job_title }}" required>
+                        <div class="invalid-feedback">
+                            Пожалуйста, заполните это поле.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="is_active" class="form-label">Активен</label>
+                        <input type="checkbox" name="user" value="{{ user.is_active }}" disabled class="form-check-input" {% if user.is_active %}checked{% endif %}>
+                        <input type="hidden" name="is_active" value="{{ 'True' if user.is_active else 'False' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="facilities" class="form-label">Привязан к объектам:</label>
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Название</th>
+                                <th>Адрес</th>
+                                <th>Доступ</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for facility in places %}
+                            <tr>
+                                <td>{{ facility.title }}</td>
+                                <td>{{ facility.address }}</td>
+                                <td>
+                                    <input type="checkbox" name="facilities" value="{{ facility.id }}" class="form-check-input" {% if facility.active %}checked{% endif %}>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-primary" onclick="submitForm()">Сохранить изменения</button>
+                        <a href="/employees/{{ user.id }}/profile" class="btn btn-secondary" id="profileLink">Обратно в профиль</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Unsaved Changes Modal -->
+<div class="modal fade" id="unsavedChangesModal" tabindex="-1" aria-labelledby="unsavedChangesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="unsavedChangesModalLabel">Предупреждение</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Вы уверены, что хотите покинуть страницу? Несохраненные изменения будут утеряны.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="confirmLeaveBtn">Покинуть страницу</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Required Fields Modal -->
+<div class="modal fade" id="requiredFieldsModal" tabindex="-1" aria-labelledby="requiredFieldsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="requiredFieldsModalLabel">Пожалуйста, заполните все обязательные поля.</h5>
+            </div>
+            <div class="modal-body">
+                Пожалуйста, заполните все обязательные поля перед отправкой формы.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Ок</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Flag to track whether changes are made
+    let changesMade = false;
+    let leaveLink = '';
+
+    // Function to handle form validation and submission
+    function submitForm() {
+        if (validateForm()) {
+            // Submit the form if validation passes
+            document.getElementById('updateForm').submit();
+            // Reset changes flag after submission
+            changesMade = false;
+        } else {
+            // Show validation modal if validation fails
+            let requiredFieldsModal = new bootstrap.Modal(document.getElementById('requiredFieldsModal'), {});
+            requiredFieldsModal.show();
+        }
+    }
+
+    // Function to validate form fields
+    function validateForm() {
+        const fio = document.getElementById('fio');
+        const job_title = document.getElementById('job_title');
+
+        let valid = true;
+
+        if (!fio.value.trim()) {
+            fio.classList.add('is-invalid');
+            valid = false;
+        } else {
+            fio.classList.remove('is-invalid');
+        }
+
+        if (!job_title.value.trim()) {
+            job_title.classList.add('is-invalid');
+            valid = false;
+        } else {
+            job_title.classList.remove('is-invalid');
+        }
+
+        return valid;
+    }
+
+    // Event listener for form input changes
+    document.addEventListener('input', function (event) {
+        // Set changesMade to true when any input element value changes
+        changesMade = true;
+    });
+
+    // Event listener for link to profile page
+    document.getElementById('profileLink').addEventListener('click', function (event) {
+        if (changesMade) {
+            // Prevent navigation and show modal
+            event.preventDefault();
+            leaveLink = event.target.href;
+            let unsavedChangesModal = new bootstrap.Modal(document.getElementById('unsavedChangesModal'), {});
+            unsavedChangesModal.show();
+        }
+    });
+</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

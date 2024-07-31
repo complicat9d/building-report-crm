@@ -1,0 +1,25 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+alembic = "*"
+psycopg2 = "*"
+sqlalchemy = "*"
+fastapi = "*"
+pydantic = "*"
+uvicorn = "*"
+telebot = "*"
+aioschedule = "*"
+jinja2 = "*"
+asyncpg = "*"
+greenlet = "*"
+aiohttp = "*"
+pydantic-settings = "*"
+
+[dev-packages]
+black = "*"
+
+[requires]
+python_version = "3.10"

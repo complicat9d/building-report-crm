@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}{{ employee.fio }}'s Profile{% endblock %}
+
+{% block content %}
+<div class="container-profile">
+    <div class="profile">
+        <div class="profile-info">
+            <h2>{{ employee.fio }}</h2>
+            <div class="profile-details">
+                <p><strong>Специальность:</strong> {{ employee.job_title }}</p>
+                <p><strong>Активен:</strong>
+                    <input type="checkbox" name="employee" value="{{ employee.is_active }}" disabled class="form-check-input" {% if employee.is_active %}checked{% endif %}>
+                </p>
+                <p><strong>Личная ссылка:</strong>
+                    <button type="button" class="btn btn-link"
+                            onclick="copyToClipboard('t.me/{{ bot_name }}?start={{ employee.token }}')">
+                        t.me/{{ bot_name }}?start={{ employee.token }}
+                    </button>
+                </p>
+                <button class="addBtn btn btn-primary" id="updateBtn" onclick="ToUpdate({{ employee.id }})">Обновить</button>
+                <button class="btn btn-danger" id="deleteBtn" data-toggle="modal" data-target="#deleteEmployeeModal">Удалить</button>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="facilities" class="form-label">Привязан к объектам:</label>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Адрес</th>
+                    <th>Доступ</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for facility in facilities %}
+                <tr>
+                    <td>{{ facility.title }}</td>
+                    <td>{{ facility.address }}</td>
+                    <td>
+                        <input type="checkbox" name="facilities" value="{{ facility.active }}" disabled class="form-check-input" {% if facility.active %}checked{% endif %}>
+                    </td>
+                    <td>
+                        <a class="addBtn btn btn-primary" onclick="viewFacilityProfile({{facility.id}})">Посмотреть объект</a>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Employee Modal -->
+<div class="modal fade" id="deleteEmployeeModal" tabindex="-1" aria-labelledby="deleteEmployeeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteEmployeeModalLabel">Удаление сотрудника</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить сотрудника <strong>{{ employee.fio }}</strong>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger" onclick="deleteEmployee({{ employee.id }})">Удалить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Copy Link Modal -->
+<div class="modal fade" id="copyLinkModal" tabindex="-1" aria-labelledby="copyLinkModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <p>Ссылка скопирована в буфер обмена</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Ок</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ul class="cards">
+    {% if reports %}
+    {% for r in reports %}
+    <li class="card">
+        <div class="content">
+            <h2>{{ r.title }}</h2>
+            <p>{{ r.description }}</p>
+            <p><span class="bold">Адрес:</span> {{ r.facility_address }}</p>
+            <div class="work-info">
+                <div class="work-date">
+                    <p><span class="bold">Дата начала работы:</span> <br/> {{ r.shift_start }}</p>
+                    <p><span class="bold">Дата окончания работы:</span> <br/> {{ r.shift_end }}</p>
+                    <p><span class="bold">Общее время работы:</span> {{ r.total_time }}</p>
+                </div>
+            </div>
+            {% if r.files|length > 1 %}
+            <div id="carouselDemo{{ r.id }}" class="carousel slide" data-ride="carousel">
+                <div class="carousel-inner">
+                    {% set count = namespace(a=0) %}
+                    {% for f in r.files %}
+                    <div class="carousel-item {% if count.a == 0 %}active{% endif %}">
+                        <img src="/api/static/{{ f }}" class="d-block w-100" alt="">
+                    </div>
+                    {% set count.a = count.a + 1 %}
+                    {% endfor %}
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselDemo{{ r.id }}" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselDemo{{ r.id }}" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+                <div class="carousel-indicators">
+                    {% set count = namespace(a=0) %}
+                    {% for f in r.files %}
+                    <button type="button" data-bs-target="#carouselDemo{{ r.id }}" data-bs-slide-to="{{ count.a }}" {% if count.a == 0 %}class="active"{% endif %}></button>
+                    {% set count.a = count.a + 1 %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="single-image">
+                <img src="/api/static/{{ r.files[0] }}" class="d-block w-100" alt="">
+            </div>
+            {% endif %}
+        </div>
+    </li>
+    {% endfor %}
+    {% endif %}
+</ul>
+
+<script>
+    function deleteEmployee(employeeId) {
+        fetch(`/employees/delete/${employeeId}`, {
+            method: 'DELETE',
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                $('#deleteEmployeeModal').modal('hide');
+                window.location.href = '/employees';
+                return response.json();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+function copyToClipboard(text) {
+      // Создаем временный элемент <textarea>
+      const textarea = document.createElement('textarea');
+
+      // Устанавливаем его значение на текст, который нужно скопировать
+      textarea.value = text;
+
+      // Добавляем элемент на страницу (он должен быть добавлен в документ, чтобы выделение работало)
+      document.body.appendChild(textarea);
+
+      // Выделяем текст внутри элемента
+      textarea.select();
+
+      // Копируем выделенный текст в буфер обмена
+      try {
+        const successful = document.execCommand('copy');
+        const msg = successful ? 'успешно' : 'не удалось';
+        console.log('Копирование текста ' + msg);
+
+        // **Показать модальное окно после успешного копирования**
+        if (successful) {
+          $('#copyLinkModal').modal('show');
+        }
+      } catch (err) {
+        console.error('Ошибка при копировании текста', err);
+      }
+
+      // Удаляем временный элемент
+      document.body.removeChild(textarea);
+    }
+
+    function ToUpdate(id) {
+        window.location.href = `../${id}/update/`;
+    }
+
+    function viewFacilityProfile(id) {
+        window.location.href = `/facilities/${id}/profile/`
+    }
+</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+{% endblock %}x

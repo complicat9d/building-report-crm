@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}{{ facility.title }}'s Profile{% endblock %}
+
+{% block content %}
+<div class="container-profile">
+    <div class="profile">
+        <div class="profile-info">
+            <h2>{{ facility.title }}</h2>
+            <div class="profile-details">
+                <p><strong>Описание:</strong> {{ facility.description }}</p>
+                <p><strong>Адрес:</strong> {{ facility.address }}</p>
+                <p><strong>Активен:</strong>
+                    <input type="checkbox" class="active-checkbox" disabled {% if facility.active %}checked{% endif %}>
+                </p>
+                <button class="addBtn btn btn-primary" id="updateBtn" onclick="ToUpdate({{ facility.id }})">Обновить
+                </button>
+                <button class="btn btn-danger" id="deleteBtn" data-toggle="modal" data-target="#deleteFacilityModal">
+                    Удалить
+                </button>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="employees" class="form-label">Привязанные сотрудники:</label>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Фио</th>
+                    <th>Специальность</th>
+                    <th>Доступ</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for employee in employees %}
+                <tr>
+                    <td>{{ employee.fio }}</td>
+                    <td>{{ employee.job_title }}</td>
+                    <td>
+                        <input type="checkbox" name="employees" value="{{ employee.is_active }}" disabled class="form-check-input" {% if employee.is_active %}checked{% endif %}>
+                    </td>
+                    <td>
+                        <a class="addBtn btn btn-primary" onclick="viewProfile({{employee.id}})">Посмотреть профиль</a>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Facility Modal -->
+<div class="modal fade" id="deleteFacilityModal" tabindex="-1" aria-labelledby="deleteFacilityModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteFacilityModalLabel">Удаление объекта</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить объект <strong>{{ facility.title }}</strong>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger" onclick="deleteFacility({{ facility.id }})">Удалить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ul class="cards">
+    {% if reports %}
+    {% for r in reports %}
+    <li class="card">
+        <div class="content">
+            <h2>{{ r.title }}</h2>
+            <p>{{ r.description }}</p>
+            <p><span class="bold">Адрес:</span> {{ facility.address }}</p>
+            <div class="work-info">
+                <div class="work-date">
+                    <p><span class="bold">Дата начала работы:</span> <br/> {{ r.shift_start }}</p>
+                    <p><span class="bold">Дата окончания работы:</span> <br/> {{ r.shift_end }}</p>
+                    <p><span class="bold">Общее время работы:</span> {{ r.total_time }}</p>
+                </div>
+            </div>
+            {% if r.files and r.files|length > 1 %}
+            <div id="carouselDemo{{ r.id }}" class="carousel slide" data-ride="carousel">
+                <div class="carousel-inner">
+                    {% set count = namespace(a=0) %}
+                    {% for f in r.files %}
+                    <div class="carousel-item {% if count.a == 0 %}active{% endif %}">
+                        <img src="/api/static/{{ f }}" class="d-block w-100" alt="">
+                    </div>
+                    {% set count.a = count.a + 1 %}
+                    {% endfor %}
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselDemo{{ r.id }}"
+                        data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselDemo{{ r.id }}"
+                        data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+                <div class="carousel-indicators">
+                    {% set count = namespace(a=0) %}
+                    {% for f in r.files %}
+                    <button type="button" data-bs-target="#carouselDemo{{ r.id }}" data-bs-slide-to="{{ count.a }}" {%
+                            if count.a== 0 %}class="active" {% endif %}></button>
+                    {% set count.a = count.a + 1 %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% elif r.files and r.files|length == 1 %}
+            <div class="single-image">
+                <img src="/api/static/{{ r.files[0] }}" class="d-block w-100" alt="">
+            </div>
+            {% endif %}
+        </div>
+    </li>
+    {% endfor %}
+    {% endif %}
+</ul>
+
+<script>
+    function deleteFacility(facilityId) {
+        fetch(`/facilities/${facilityId}/delete`, {
+            method: 'DELETE',
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                $('#deleteFacilityModal').modal('hide');
+                window.location.href = '/facilities';
+                return response.json();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    function ToUpdate(id) {
+        window.location.href = `../${id}/update/`;
+    }
+
+    function viewProfile(id) {
+        window.location.href = `/employees/${id}/profile/`
+    }
+</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+{% endblock %}
