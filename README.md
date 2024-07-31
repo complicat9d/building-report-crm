@@ -15,9 +15,9 @@ touch .env
 ```
 2.2 Open `.env-example` and copy all the contents present to `.env`.
 
-2.3 To boot up the telegram bot, you have to own a token, which can be acquired via [@BotFaher](t.me/BotFather). Change `TOKEN` variable to the API key which was provided and `BOT_NAME` to the username of your bot.
+2.3 To boot up the telegram bot, you have to own a token, which can be acquired via [@BotFather](t.me/BotFather). Change `TOKEN` variable to the API key which was provided and `BOT_NAME` to the username of your bot.
 
-2.4 To ensure the application launches, you need to fill in only `PASSWORD` variable for the admin panel password. `LOGIN` is set to `admin` by default, but if you want to change it, then you either should edit `LOGIN` variable in the `config.py`, or remove it and then list it in the `.env`.
+2.4 To ensure the application launches, you need to fill in only `PASSWORD` variable for the admin panel password. `LOGIN` is set to `admin` by default, but if you want to change it, then you either should edit `LOGIN` variable in the `config.py`, or remove it and then list it in `.env`.
 
 ## 3. Launch Application
 To launch the app, you have to have `docker` and `docker compose` installed, be it Docker-Desktop for OS X or Windows or the shell-based app for Linux.
