@@ -51,7 +51,7 @@ class TokenDAL:
     @staticmethod
     async def get_active(ip_address: str) -> TokenSchema:
         async with async_session() as session, session.begin():
-            q = sa.select(Token.id).where(
+            q = sa.select(Token.__table__).where(
                 sa.and_(Token.ip_address == ip_address, Token.is_expired == False)
             )
             result = (await session.execute(q)).mappings().first()
